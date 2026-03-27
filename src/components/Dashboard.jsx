@@ -1,3 +1,5 @@
+import RewardRulesTab from "./RewardRulesTab";
+import RewardRecordsTab from "./RewardRecordsTab";
 import { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
 import RecordsTab from "./RecordsTab";
@@ -5,8 +7,7 @@ import StudentsTab from "./StudentsTab";
 import RulesTab from "./RulesTab";
 import SummaryTab from "./SummaryTab";
 import UsersTab from "./UsersTab";
-import RewardRulesTab from "./RewardRulesTab";
-import RewardRecordsTab from "./RewardRecordsTab";
+
 
 export default function Dashboard({ session }) {
   const [tab, setTab] = useState("summary");
@@ -67,38 +68,48 @@ export default function Dashboard({ session }) {
         </div>
 
         <div style={{ marginBottom: 20 }}>
-          {canInput && (
+        {canInput && (
+          <>
             <button onClick={() => setTab("records")} style={{ marginRight: 8 }}>
               벌점 입력
             </button>
-          )}
+            <button onClick={() => setTab("reward-records")} style={{ marginRight: 8 }}>
+              상점 입력
+            </button>
+          </>
+        )}
 
-          {isAdmin && (
-            <>
-              <button onClick={() => setTab("students")} style={{ marginRight: 8 }}>
-                학생 관리
-              </button>
-              <button onClick={() => setTab("rules")} style={{ marginRight: 8 }}>
-                벌점 기준
-              </button>
-              <button onClick={() => setTab("users")} style={{ marginRight: 8 }}>
-                회원 승인
-              </button>
-            </>
-          )}
+        {isAdmin && (
+          <>
+            <button onClick={() => setTab("students")} style={{ marginRight: 8 }}>
+              학생 관리
+            </button>
+            <button onClick={() => setTab("rules")} style={{ marginRight: 8 }}>
+              벌점 기준
+            </button>
+            <button onClick={() => setTab("reward-rules")} style={{ marginRight: 8 }}>
+              상점 기준
+            </button>
+            <button onClick={() => setTab("users")} style={{ marginRight: 8 }}>
+              회원 승인
+            </button>
+          </>
+        )}
 
-          <button onClick={() => setTab("summary")}>집계</button>
-        </div>
+        <button onClick={() => setTab("summary")}>집계</button>
+      </div>
 
         <hr />
 
         <div style={{ marginTop: 20 }}>
-          {tab === "records" && canInput && <RecordsTab isAdmin={isAdmin} />}
-          {tab === "students" && isAdmin && <StudentsTab />}
-          {tab === "rules" && isAdmin && <RulesTab />}
-          {tab === "users" && isAdmin && <UsersTab currentUserId={session.user.id} />}
-          {tab === "summary" && <SummaryTab />}
-        </div>
+  {tab === "records" && canInput && <RecordsTab isAdmin={isAdmin} />}
+  {tab === "reward-records" && canInput && <RewardRecordsTab isAdmin={isAdmin} />}
+  {tab === "students" && isAdmin && <StudentsTab />}
+  {tab === "rules" && isAdmin && <RulesTab />}
+  {tab === "reward-rules" && isAdmin && <RewardRulesTab />}
+  {tab === "users" && isAdmin && <UsersTab currentUserId={session.user.id} />}
+  {tab === "summary" && <SummaryTab />}
+</div>
       </div>
     </div>
   );

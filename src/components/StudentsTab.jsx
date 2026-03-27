@@ -94,37 +94,47 @@ export default function StudentsTab() {
     load();
   };
 
-  const removeStudent = async (id, studentName) => {
-    const ok = window.confirm(
-      `${studentName} 학생을 삭제하시겠습니까?\n관련 벌점 기록도 함께 삭제됩니다.`
-    );
-    if (!ok) return;
+  const removeAllStudents = async () => {
+  const ok = window.confirm(
+    "학생 전체 삭제를 진행하시겠습니까?\n관련 벌점 기록과 상점 기록도 모두 삭제됩니다.\n이 작업은 되돌릴 수 없습니다."
+  );
+  if (!ok) return;
 
-    setMessage("");
+  setMessage("");
 
-    const { error: recordsError } = await supabase
-      .from("records")
-      .delete()
-      .eq("student_id", id);
+  const { error: penaltyError } = await supabase
+    .from("records")
+    .delete()
+    .not("id", "is", null);
 
-    if (recordsError) {
-      setMessage(`벌점 기록 삭제 실패: ${recordsError.message}`);
-      return;
-    }
+  if (penaltyError) {
+    setMessage(`벌점 기록 전체 삭제 실패: ${penaltyError.message}`);
+    return;
+  }
 
-    const { error: studentError } = await supabase
-      .from("students")
-      .delete()
-      .eq("id", id);
+  const { error: rewardError } = await supabase
+    .from("reward_records")
+    .delete()
+    .not("id", "is", null);
 
-    if (studentError) {
-      setMessage(`학생 삭제 실패: ${studentError.message}`);
-      return;
-    }
+  if (rewardError) {
+    setMessage(`상점 기록 전체 삭제 실패: ${rewardError.message}`);
+    return;
+  }
 
-    setMessage("학생 및 관련 벌점 기록 삭제 완료");
-    load();
-  };
+  const { error: studentError } = await supabase
+    .from("students")
+    .delete()
+    .not("id", "is", null);
+
+  if (studentError) {
+    setMessage(`학생 전체 삭제 실패: ${studentError.message}`);
+    return;
+  }
+
+  setMessage("학생 전체 삭제 완료");
+  load();
+};
 
   const markWithdrawn = async (id, studentName) => {
     const ok = window.confirm(`${studentName} 학생을 퇴사 처리하시겠습니까?`);
@@ -192,6 +202,12 @@ export default function StudentsTab() {
           style={{ marginRight: 8 }}
         />
         <button onClick={add}>추가</button>
+        <button
+          onClick={removeAllStudents}
+          style={{ marginLeft: 8, background: "#b91c1c", color: "white" }}
+          >
+          학생 전체 삭제
+          </button>
       </div>
 
       <div style={{ marginBottom: 16 }}>

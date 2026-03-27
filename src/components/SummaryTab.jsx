@@ -26,6 +26,13 @@ export default function SummaryTab() {
     load();
   }, []);
 
+  const formatSignedPoints = (value) => {
+    const num = Number(value || 0);
+    if (num > 0) return `+${num}점`;
+    if (num < 0) return `${num}점`;
+    return "0점";
+  };
+
   const summary = {};
 
   penaltyRecords.forEach((r) => {
@@ -62,7 +69,7 @@ export default function SummaryTab() {
 
   const summaryList = Object.values(summary).map((item) => ({
     ...item,
-    total: item.penaltyTotal - item.rewardTotal,
+    total: item.rewardTotal - item.penaltyTotal,
   }));
 
   const selectedPenaltyRecords = penaltyRecords.filter(
@@ -81,7 +88,8 @@ export default function SummaryTab() {
       방번호: item.room ?? "",
       벌점합: item.penaltyTotal,
       상점합: item.rewardTotal,
-      최종합: item.total,
+      총합: item.total,
+      표시: formatSignedPoints(item.total),
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(data);
@@ -116,7 +124,7 @@ export default function SummaryTab() {
                 {item.grade ?? "-"}학년 {item.class_name ?? "-"}반 {item.name} ({item.room ?? "-"}호)
                 {" / "}벌점 {item.penaltyTotal}점
                 {" / "}상점 {item.rewardTotal}점
-                {" / "}총합 {item.total}점
+                {" / "}총합 {formatSignedPoints(item.total)}
               </button>
             </div>
           ))}
@@ -132,7 +140,7 @@ export default function SummaryTab() {
               </h3>
 
               <div style={{ marginBottom: 12 }}>
-                벌점 합: {selectedStudent.penaltyTotal} / 상점 합: {selectedStudent.rewardTotal} / 총합: {selectedStudent.total}
+                벌점 합: {selectedStudent.penaltyTotal}점 / 상점 합: {selectedStudent.rewardTotal}점 / 총합: {formatSignedPoints(selectedStudent.total)}
               </div>
 
               <h4>벌점 내역</h4>
@@ -140,7 +148,7 @@ export default function SummaryTab() {
               {selectedPenaltyRecords.map((r) => (
                 <div key={r.id} style={{ marginBottom: 8 }}>
                   {r.date} / {r.rules?.title || "-"}
-                  {r.points !== null && r.points !== undefined ? ` / ${r.points}점` : ""}
+                  {r.points !== null && r.points !== undefined ? ` / -${Number(r.points)}점` : ""}
                   {r.action_text ? ` / ${r.action_text}` : ""}
                 </div>
               ))}
@@ -150,7 +158,7 @@ export default function SummaryTab() {
               {selectedRewardRecords.map((r) => (
                 <div key={r.id} style={{ marginBottom: 8 }}>
                   {r.date} / {r.reward_rules?.title || "-"}
-                  {r.points !== null && r.points !== undefined ? ` / ${r.points}점` : ""}
+                  {r.points !== null && r.points !== undefined ? ` / +${Number(r.points)}점` : ""}
                   {r.action_text ? ` / ${r.action_text}` : ""}
                 </div>
               ))}
