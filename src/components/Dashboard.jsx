@@ -5,6 +5,8 @@ import StudentsTab from "./StudentsTab";
 import RulesTab from "./RulesTab";
 import SummaryTab from "./SummaryTab";
 import UsersTab from "./UsersTab";
+import RewardRulesTab from "./RewardRulesTab";
+import RewardRecordsTab from "./RewardRecordsTab";
 
 export default function Dashboard({ session }) {
   const [tab, setTab] = useState("summary");
