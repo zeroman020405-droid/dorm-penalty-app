@@ -6,6 +6,24 @@ export default function SummaryTab() {
   const [penaltyRecords, setPenaltyRecords] = useState([]);
   const [rewardRecords, setRewardRecords] = useState([]);
   const [selectedStudent, setSelectedStudent] = useState(null);
+  const [message, setMessage] = useState("");
+  const [canDelete, setCanDelete] = useState(false);
+
+  const loadPermission = async () => {
+    const { data: authData } = await supabase.auth.getUser();
+    const user = authData?.user;
+    if (!user) return;
+
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("role, can_input")
+      .eq("id", user.id)
+      .single();
+
+    if (!error && profile) {
+      setCanDelete(profile.role === "admin" || profile.can_input === true);
+    }
+  };
 
   const load = async () => {
     const { data: penaltyData } = await supabase
@@ -24,6 +42,7 @@ export default function SummaryTab() {
 
   useEffect(() => {
     load();
+    loadPermission();
   }, []);
 
   const formatSignedPoints = (value) => {
@@ -31,6 +50,42 @@ export default function SummaryTab() {
     if (num > 0) return `+${num}점`;
     if (num < 0) return `${num}점`;
     return "0점";
+  };
+
+  const removePenaltyRecord = async (id) => {
+    const ok = window.confirm("이 벌점 기록을 삭제하시겠습니까?");
+    if (!ok) return;
+
+    const { error } = await supabase
+      .from("records")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      setMessage(`벌점 기록 삭제 실패: ${error.message}`);
+      return;
+    }
+
+    setMessage("벌점 기록 삭제 완료");
+    await load();
+  };
+
+  const removeRewardRecord = async (id) => {
+    const ok = window.confirm("이 상점 기록을 삭제하시겠습니까?");
+    if (!ok) return;
+
+    const { error } = await supabase
+      .from("reward_records")
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      setMessage(`상점 기록 삭제 실패: ${error.message}`);
+      return;
+    }
+
+    setMessage("상점 기록 삭제 완료");
+    await load();
   };
 
   const summary = {};
@@ -106,6 +161,8 @@ export default function SummaryTab() {
         집계 엑셀 다운로드
       </button>
 
+      {message && <div style={{ marginBottom: 12 }}>{message}</div>}
+
       <div style={{ display: "flex", gap: 24, alignItems: "flex-start" }}>
         <div style={{ flex: 1 }}>
           {summaryList.map((item) => (
@@ -146,20 +203,54 @@ export default function SummaryTab() {
               <h4>벌점 내역</h4>
               {selectedPenaltyRecords.length === 0 && <div>벌점 내역 없음</div>}
               {selectedPenaltyRecords.map((r) => (
-                <div key={r.id} style={{ marginBottom: 8 }}>
-                  {r.date} / {r.rules?.title || "-"}
-                  {r.points !== null && r.points !== undefined ? ` / -${Number(r.points)}점` : ""}
-                  {r.action_text ? ` / ${r.action_text}` : ""}
+                <div
+                  key={r.id}
+                  style={{
+                    marginBottom: 8,
+                    padding: 8,
+                    border: "1px solid #ddd",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <div>
+                    {r.date} / {r.rules?.title || "-"}
+                    {r.points !== null && r.points !== undefined ? ` / -${Number(r.points)}점` : ""}
+                    {r.action_text ? ` / ${r.action_text}` : ""}
+                  </div>
+
+                  {canDelete && (
+                    <button onClick={() => removePenaltyRecord(r.id)}>삭제</button>
+                  )}
                 </div>
               ))}
 
               <h4 style={{ marginTop: 16 }}>상점 내역</h4>
               {selectedRewardRecords.length === 0 && <div>상점 내역 없음</div>}
               {selectedRewardRecords.map((r) => (
-                <div key={r.id} style={{ marginBottom: 8 }}>
-                  {r.date} / {r.reward_rules?.title || "-"}
-                  {r.points !== null && r.points !== undefined ? ` / +${Number(r.points)}점` : ""}
-                  {r.action_text ? ` / ${r.action_text}` : ""}
+                <div
+                  key={r.id}
+                  style={{
+                    marginBottom: 8,
+                    padding: 8,
+                    border: "1px solid #ddd",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 8,
+                  }}
+                >
+                  <div>
+                    {r.date} / {r.reward_rules?.title || "-"}
+                    {r.points !== null && r.points !== undefined ? ` / +${Number(r.points)}점` : ""}
+                    {r.action_text ? ` / ${r.action_text}` : ""}
+                  </div>
+
+                  {canDelete && (
+                    <button onClick={() => removeRewardRecord(r.id)}>삭제</button>
+                  )}
                 </div>
               ))}
             </>
